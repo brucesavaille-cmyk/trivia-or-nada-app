@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Trivia or Nada</string>
+    <string name="title_activity_main">Trivia or Nada</string>
+    <string name="package_name">com.savailleentertainment.triviaornada</string>
+    <string name="custom_url_scheme">com.savailleentertainment.triviaornada</string>
+</resources>

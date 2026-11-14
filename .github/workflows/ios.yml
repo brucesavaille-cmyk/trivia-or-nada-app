@@ -1,0 +1,67 @@
+name: Build iOS app (unsigned)
+
+# Builds the Trivia or Nada iOS app on a macOS runner in the cloud,
+# so no Mac is needed locally. Produces an UNSIGNED .app bundle:
+# it proves the project compiles, but it cannot be installed on a
+# device or submitted to the App Store until signing is set up
+# (see CLOUD_BUILD.md).
+#
+# Triggers: every push to main, or manually from the Actions tab
+# (Actions -> Build iOS app (unsigned) -> Run workflow).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Build iOS (unsigned)
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync Capacitor web assets into the iOS project
+        run: npx cap sync ios
+
+      # Capacitor 8 projects only have a Podfile when a plugin needs
+      # CocoaPods. This project currently has none (it uses Swift
+      # Package Manager), so this step is a no-op until a plugin
+      # adds one. Kept conditional so the workflow never fails here.
+      - name: Install CocoaPods dependencies (if any)
+        run: |
+          if [ -f ios/App/Podfile ]; then
+            cd ios/App && pod install
+          else
+            echo "No Podfile — skipping pod install (no CocoaPods dependencies)."
+          fi
+
+      - name: Build iOS app (unsigned)
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Upload unsigned .app
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivia-or-nada-ios-unsigned
+          path: build/Build/Products/Debug-iphoneos/App.app
+          retention-days: 14
