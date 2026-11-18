@@ -1,0 +1,13 @@
+# Dependencies / generated files
+node_modules/
+ios/App/Pods/
+ios/App/build/
+build/
+DerivedData/
+
+# macOS
+.DS_Store
+
+# Xcode user state
+*.xcuserstate
+xcuserdata/
